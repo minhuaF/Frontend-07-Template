@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicTacToe</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        .container {
+            width: 255px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .cell {
+            width: 80px;
+            height: 80px;
+            line-height: 80px;
+            background-color: cadetblue;
+            margin-left: 5px;
+            margin-top: 5px;
+            display: inline-block;
+            cursor: pointer;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="container" class="container"></div>
+</body>
+<script>
+    const checkerBoard = [
+      [0,2,0],
+      [0,1,0],
+      [0,0,0]
+    ]
+
+    const emoji = [ '⭕', '❌']
+
+    let curEmoji = 1;
+    let winner = "";
+    const container = document.getElementById("container");
+
+    function renderBoard() {
+        for(let i = 0; i < 3; i++) {
+            for(let j = 0; j < 3; j++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.setAttribute('data-row', i);
+                cell.setAttribute('data-column', j);
+                container.appendChild(cell)
+            }
+        }
+    }
+
+    function renderEmoji() {
+        const cells = container.childNodes;
+        Array.from(cells).forEach((cell, index) => {
+            const { row, column } = cell.dataset;
+            cell.innerHTML = checkerBoard[row][column] === 1 ? emoji[0] : (checkerBoard[row][column] === 2 ? emoji[1] : "");
+            cell.onclick = () => (checkerBoard[row][column] === 0 && winner === "") ? bindClick(row, column) : () => {};
+        })
+    }
+
+    function bindClick(row, column) {
+        checkerBoard[row][column] = curEmoji;
+        if(checkWin(checkerBoard, curEmoji)) {
+            winner = emoji[curEmoji - 1]
+            console.log(`${winner} win, game over! `);
+        }
+        renderEmoji();
+        curEmoji = curEmoji === 1 ? 2 : 1;
+        let p = willWin(checkerBoard, curEmoji); 
+        if(winner === "" && p) {
+            console.log(`${emoji[curEmoji - 1 === 0 ? 0 : 1]} will win ~`);
+        }
+    }
+
+    function clone(data) {
+        return JSON.parse(JSON.stringify(data));
+    }
+
+    function checkWin(checkerBoard, curEmoji) {
+        for(let i = 0; i < 3; i++) {
+            let win = true;
+            for(let j =0; j < 3; j++) {
+                if(checkerBoard[i][j] !== curEmoji) {
+                    win = false
+                }
+            }
+
+            if(win) {
+                return true;
+            }
+        }
+        for(let i = 0; i < 3; i++) {
+            let win = true;
+            for(let j =0; j <3; j++ ) {
+                if(checkerBoard[j][i] !== curEmoji) {
+                    win = false;
+                }
+            }
+            if(win) {
+                return true;
+            }
+        }
+        {
+            let win = true;
+            for(let i = 0; i < 3; i++) {
+                if(checkerBoard[i][2-1] !== curEmoji) {
+                    win = false;
+                }
+            }
+            if(win) {
+                return true;
+            }
+        }
+        {
+            let win = true;
+            for(let i = 0; i < 3; i ++) {
+                if(checkerBoard[i][i] !== curEmoji) {
+                    win = false;
+                }
+            }
+            if(win) {
+                return true;
+            }
+        }
+
+        return false;
+    } 
+
+    function willWin(checkerBoard, curEmoji) {
+        for(let i = 0; i < 3; i++) {
+            for(let j = 0; j < 3; j++) {
+                if(checkerBoard[i][j]) {
+                    continue;
+                }
+                const temp = clone(checkerBoard);
+                temp[i][j] = curEmoji;
+                if(checkWin(temp, curEmoji)) {
+                    return [j, i];  // NOTE：为什么是 [j,i]，而不是 [i,j]
+                } 
+            }
+        }
+        return null
+    }
+
+    function bestChoice(checkerBoard, curEmoji) {
+        let p;
+        if(p = willWin(checkerBoard, curEmoji)) {  
+            return {
+                result: 1,
+                point: p
+            }
+        }
+
+        let result = -2; // -1输 0和 1赢
+        let point = null;
+        for(let i = 0; i < 3; i++) {
+            for(let j = 0; j < 3; j++) {
+                if(checkerBoard[i][j]) continue;
+                let temp = clone(checkerBoard);
+                temp[i][j] = curEmoji;
+                let res  = bestChoice(temp, 3 - curEmoji).result;
+                if(- res > result) {
+                    result = - res;
+                    point = [j, i] 
+                }
+
+            }
+        }
+        
+        return {
+            point,
+            result: point ? result : 0
+        }
+    }
+
+    renderBoard();
+    renderEmoji();
+    const pointerAI = bestChoice(checkerBoard, curEmoji);
+    console.log('AI===>>>', pointerAI)
+
+</script>
+</html>

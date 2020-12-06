@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>红绿灯</title>
+    <style>
+        html,
+        body {
+            padding: 0;
+            margin: 0;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+        }
+        .container .red,
+        .container .green,
+        .container .yellow {
+            border-radius: 50%;
+            height: 50px;
+            width: 50px;
+            margin: 10px;
+            background-color: #999;
+            cursor: pointer;
+        }
+
+        .container .red.active {
+            background-color: red;
+        }
+        .container .green.active {
+            background-color: green;
+        }
+        .container .yellow.active {
+            background-color: yellow;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container" id="container">
+        <div class="red" id="red"></div>
+        <div class="green" id="green"></div>
+        <div class="yellow" id="yellow"></div>
+    </div>
+
+    <script>
+        const lights = ['green', 'red', 'yellow'];
+        const times = [3000, 2000, 3000]
+    
+        const clearLight = () => {
+            const container = document.getElementById('container');
+            container.querySelectorAll('.active').forEach(node => node.classList.remove('active'));
+        }
+
+        const lightUp = color => {
+            clearLight();
+            const light = document.getElementById(color);
+            light.classList.add('active')
+        }
+
+        const sleep = duration => new Promise((resolve, reject) => {
+            setTimeout(resolve, duration)
+        })
+
+        const goByCallBack = () => {
+            lightUp(lights[0])
+            console.log("callback going ...");
+            setTimeout(() => {
+                lightUp(lights[1])
+                setTimeout(() => {
+                    lightUp(lights[2]);
+                    setTimeout(() => {
+                        goByCallBack()
+                    }, times[2])
+                }, times[1])
+            }, times[0])
+        }
+
+        const goByPromise = () => {
+            lightUp(lights[0]);
+            console.log("promise going ...");
+            sleep(times[0]).then(() => {
+                lightUp(lights[1])
+                return sleep(times[1])
+            }).then(() => {
+                lightUp(lights[2])
+                return sleep(times[2])
+            }).then(goByPromise)
+        }
+
+        const goByAsync = async () => {
+            console.log("async/await going ...");
+            while(true) {
+                lightUp(lights[0]);
+                await sleep(times[0]);
+                lightUp(lights[1]);
+                await sleep(times[1]);
+                lightUp(lights[2]);
+                await sleep(times[2]);
+            }
+        }
+
+        const manualHandler = () => {
+            console.log("manual going ...");
+            console.log('请点击你想要亮的灯');
+            lights.map(color => {
+                const light = document.getElementById(color);
+                light.addEventListener('click', () => {
+                    lightUp(color)
+                })
+            })
+        }
+
+    </script>
+</body>
+</html>
