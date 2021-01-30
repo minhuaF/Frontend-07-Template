@@ -7,7 +7,7 @@ function kmp(source, pattern) {
     while(i < pattern.length) {
       if(pattern[i] === pattern[j]) {
         j++, i++;
-        table[i] = j;
+        table[i] = j; // 保存的是当前位的后一位
       } else {
         if(j > 0) {
           j = table[j]
