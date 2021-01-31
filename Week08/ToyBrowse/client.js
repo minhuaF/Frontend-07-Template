@@ -1,4 +1,3 @@
-const { indigo } = require('color-name');
 const net = require('net');
 
 class Request {
@@ -12,12 +11,12 @@ class Request {
     this.path = options.path || '/';
     this.body = options.body || {};
     this.headers = options.headers || {};
-    if(this.headers["Content-Type"]) {
-      this.headers["Content-Type"] = "application/x-wwww-form-urlencoded";
+    if(!this.headers["Content-Type"]) {
+      this.headers["Content-Type"] = "application/x-www-form-urlencoded";
     }
     if(this.headers["Content-Type"] === 'application/json') {
       this.bodyText = JSON.stringify(this.body)
-    } else if(this.headers["Content-Type"] === 'applition/x-www-form-urlencoded') {
+    } else if(this.headers["Content-Type"] === 'application/x-www-form-urlencoded') {
       this.bodyText = Object.keys(this.body).map(key => `${key}=${encodeURIComponent(this.body[key])}`).join('&')
     }
 
@@ -43,7 +42,7 @@ class Request {
       }
 
       connection.on('data', (data) => {
-        console.log(data.toString())
+        console.log('=result',data.toString())
         parser.receive(data.toString());
         if(parser.isFinished) {
           resolve(parser.response);
@@ -53,20 +52,18 @@ class Request {
 
       connection.on('error', (err) => {
         reject(err);
+        console.error('connection error', err)
         connection.end();
       })
     })
   }
 
   toString() {
-    return `${this.method} ${this.path} HTTP/1.1\r
-${Object.keys(this.headers).map(key => `${key}: ${this.headers[key]}`).join('\r\n')}\r
-\r
-${this.bodyText}
-    `
+    return `${this.method} ${this.path} HTTP/1.1\r\n${Object.keys(this.headers)
+      .map((key) => `${key}: ${this.headers[key]}`)
+      .join("\r\n")}\r\n\r\n${this.bodyText}`
   }
 }
-
 class ResponseParser {
   constructor() {
     this.WAITING_STATUS_LINE = 0;
@@ -78,7 +75,7 @@ class ResponseParser {
     this.WAITING_HEADER_BLOCK_END = 6;
     this.WAITING_BODY = 7;
     
-    this.current = this.WAITING_HEADER_LINE;
+    this.current = this.WAITING_STATUS_LINE;
     this.statueLine = '';
     this.headers = {};
     this.headerName = "";
@@ -91,7 +88,7 @@ class ResponseParser {
   }
 
   get response() {
-    this.statueLine.match(/HTTP\/1.1 ([0-9]+) ([\s\S]+)/)；
+    this.statueLine.match(/HTTP\/1.1 ([0-9]+) ([\s\S]+)/);
     return {
       statusCode: RegExp.$1,
       statusText: RegExp.$2,
@@ -122,7 +119,7 @@ class ResponseParser {
         this.current = this.WAITING_HEADER_SPACE
       } else if(char === '\r') {
         this.current = this.WAITING_HEADER_BLOCK_END
-        if(this.headers['transfer_encodeing'] === 'chunked') {
+        if(this.headers['Transfer-Encoding'] === 'chunked') {
           this.bodyParser = new TrunkedBodyParser();
         }
       } else {
@@ -155,7 +152,6 @@ class ResponseParser {
     }
   }
 }
-
 class TrunkedBodyParser{
   constructor() {
     this.WAITING_LENGTH = 0;
@@ -202,19 +198,18 @@ class TrunkedBodyParser{
   }
 }
 
-void async function() {
+async function init() {
   let request = new Request({
     method: 'POST',
     host: "127.0.0.1",
-    port: "8888",
+    port: "8088",
     path: '/',
-    headers: {
-      ['X-Foo2']: 'customed'
-    },
     body: {
-      name: '起风了'
+      name: '123'
     }
   })
   let response = await request.send(); 
-  console.log(response);
+  console.log('===response',response);
 }
+
+init();
