@@ -147,7 +147,6 @@ class ResponseParser {
         this.current = this.WAITING_BODY;
       }
     } else if( this.current === this.WAITING_BODY) {
-      console.log(char)
       this.bodyParser.receiveChar(char)
     }
   }
@@ -181,13 +180,16 @@ class TrunkedBodyParser{
         this.current = this.READING_TRUNK
       }
     } else if(this.current === this.READING_TRUNK) {
+      if(this.isFinished) {
+        return;
+      }
       this.content.push(char)
       this.length --;
       if(this.length === 0) {
         this.current = this.WAITING_NEW_LINE
       }
     } else if(this.current === this.WAITING_NEW_LINE) {
-      if(char === '/r') {
+      if(char === '\r') {
         this.current = this.WAITING_NEW_LINE_END
       }
     } else if( this.current === this.WAITING_NEW_LINE_END) {
