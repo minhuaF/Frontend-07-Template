@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div class="className" id="idName">
+        <h5>思考题: 为什么 first-letter 可以设置 float 之类的，而 first-line 不行呢</h5>
+        <div>
+            个人理解：first-line 是浏览器渲染排版之后的”第一行“，那么，形成第一行的时机之后，已经完成了layout渲染，如果此时修改类似 float 这样会引起布局变化的属性，则会有所影响，所以first-line只支持修改重绘相关的属性。
+        </div>
+    </div>
+
+
+    <script>
+        const result = match('div#idName.className p', document.getElementById('idName'));
+        console.log('result ==>', result);
+
+        // 只匹配了标签选择器，id选择器，类选择器，其他的选择器，暂未处理
+        function match(selector, element) {
+            const selectorArray = selector?.split(' ') || []; // 根据空格拆分选择器，得到需要变量的次数；
+            let index = selectorArray.length - 1; // 从下标0开始遍历；
+            let ele = element;
+            
+            // 从后往前匹配
+            while(index >= 0) {
+                const curSelector = selectorArray[index];
+                
+                while(true) {
+                    if(!ele) return false;
+                    const singleMatch = singleSelectorMatch(curSelector, ele);
+                    ele = ele.parentElement;
+                    if(singleMatch) { // 当前匹配，就跳出节点的循环，找下一个selector的匹配
+                        break;
+                    } else {
+                        // 当前的节点不能匹配，则继续在dom树往上寻找
+                        continue
+                    }
+                }
+
+                index --;
+            }
+
+            return true;
+
+        }
+
+        /**
+         *  div
+         *  .class 单个或多个
+         *  #id 单个
+         *  .class#id
+         *  div.class#id
+         * */
+        function singleSelectorMatch(selector, element) {
+            const reg = /^([^.^#]+)|(\.[^.^#]+)|(\#[^.^#]+)/g;
+            const splitSelector = selector.match(reg);
+            for(let curSelector of splitSelector) {
+                if(curSelector.charAt(0) === '#') { // id选择器
+                    const ids = element?.id?.split(' ') || [];
+                    const idName = curSelector.substr(1);
+                    if(!ids.includes(idName)) {
+                        return false
+                    }
+                } else if(curSelector.charAt(0) === '.')  { // 类选择器
+                    const className = curSelector.substr(1);
+                    if(!element.classList.contains(className)) {
+                        return false;
+                    }
+                } else { // 标签选择器
+                    if(element.tagName.toLowerCase() !== curSelector) {
+                        return false
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        match("div #id.class", document.getElementById("id"));
+
+    </script>
+</body>
+
+</html>
